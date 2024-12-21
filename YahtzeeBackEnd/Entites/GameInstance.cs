@@ -4,7 +4,6 @@ namespace YahtzeeBackEnd.Entites
 {
     public class GameInstance
     {
-        public readonly string RoomCode;
         public int Round = 0;
         public bool StartingPlayerPlayed = false;
         public bool Player1Turn = true;
@@ -12,6 +11,7 @@ namespace YahtzeeBackEnd.Entites
         public byte[] Dice = new byte[5];
         public bool[] RollingDice = new bool[5];
         public int[] TotalPlayerScores = [-1, -1];
+        public byte RollCount = 0;
 
         //DICE LOGIC
         public void KeepDice(int dice)
@@ -39,6 +39,7 @@ namespace YahtzeeBackEnd.Entites
                     Dice[i] = (byte)rnd.Next(0, 6);
                 }
             }
+            RollCount++;
         }
 
         /// <summary>
@@ -114,6 +115,8 @@ namespace YahtzeeBackEnd.Entites
             }
             if (StartingPlayerPlayed)
             {
+                ResetDice();
+                RollCount = 0;
                 Round++;
             }
             StartingPlayerPlayed = !StartingPlayerPlayed;
@@ -124,8 +127,15 @@ namespace YahtzeeBackEnd.Entites
         {
             return fields.Sum(e=>e) + fields.Take(6).Sum(e=>e) > 62 ? 35 : 0;
         }
-        public GameInstance(string code) {
-            this.RoomCode = code;
+        public int[] GetCurrentPlayerScore()
+        {
+            return Playerscores[Player1Turn ? 0 : 1];
+        }
+        public int[] GetLastPlayerScore()
+        {
+            return Playerscores[Player1Turn ? 1 : 0];
+        }
+        public GameInstance() {
             Playerscores[0] = new int[13];
             Playerscores[1] = new int[13];
             for(int i =0; i < 13; i++)
