@@ -4,6 +4,7 @@ namespace YahtzeeBackEnd.Entites
 {
     public class GameInstance
     {
+        public bool Started = false;
         public int Round = 0;
         public bool StartingPlayerPlayed = false;
         public bool Player1Turn = true;
@@ -36,7 +37,7 @@ namespace YahtzeeBackEnd.Entites
             {
                 if (RollingDice[i])
                 {
-                    Dice[i] = (byte)rnd.Next(0, 6);
+                    Dice[i] = (byte)rnd.Next(1, 6);
                 }
             }
             RollCount++;
@@ -81,9 +82,9 @@ namespace YahtzeeBackEnd.Entites
                         .First().Count() >= 4 ? Dice.Sum(e => e) : 0;
                     break;
                 case YathzeeMove.Full_house:
-                    var diceDisposition = Dice.GroupBy(e => e).OrderByDescending(e => e);
+                    var diceDisposition = Dice.GroupBy(e => e).Select(e=>e.Count()).OrderByDescending(e => e).ToList();
                     Playerscores[Player1Turn ? 0 : 1][(int)move] = (diceDisposition.Count() == 2
-                        && diceDisposition.First().Count() ==3 ) ? 25 : 0;
+                        && diceDisposition.First() ==3 ) ? 25 : 0;
                     break;
                 case YathzeeMove.Small_straight:
                     Playerscores[Player1Turn ? 0 : 1][(int)move] = ((List<byte[]>)[[1, 2, 3, 4],[2, 3, 4, 5],[3, 4, 5, 6]]).
@@ -115,10 +116,10 @@ namespace YahtzeeBackEnd.Entites
             }
             if (StartingPlayerPlayed)
             {
-                ResetDice();
-                RollCount = 0;
                 Round++;
             }
+            RollCount = 0;
+            ResetDice();
             StartingPlayerPlayed = !StartingPlayerPlayed;
             Player1Turn = !Player1Turn;
             return false;
@@ -131,6 +132,15 @@ namespace YahtzeeBackEnd.Entites
         {
             return Playerscores[Player1Turn ? 0 : 1];
         }
+        public void StartGame()
+        {
+            Player1Turn = TotalPlayerScores[0]>TotalPlayerScores[1];
+            TotalPlayerScores[0] = -1;
+            RollCount = 0;
+            TotalPlayerScores[1] = -1;
+            ResetDice();
+            Started = true;
+        }
         public int[] GetLastPlayerScore()
         {
             return Playerscores[Player1Turn ? 1 : 0];
@@ -140,9 +150,10 @@ namespace YahtzeeBackEnd.Entites
             Playerscores[1] = new int[13];
             for(int i =0; i < 13; i++)
             {
+                Playerscores[0][i] = -1;
                 Playerscores[1][i] = -1;
-                Playerscores[2][i] = -1;
             }
+            ResetDice();
         }
 
     }

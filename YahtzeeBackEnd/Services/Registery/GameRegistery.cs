@@ -14,8 +14,13 @@ namespace YahtzeeBackEnd.Services.Registery
         public void AddGameInstance(GameInstanceGuard instance)
         {
             _currentGames.Add(instance.RoomCode, instance);
-            _connectionMappings.Add(instance.ConnectionIds[0], instance.RoomCode);
-            _connectionMappings.Add(instance.ConnectionIds[1], instance.RoomCode);
+            foreach(var connectionId in instance.ConnectionIds.Where(e => e != "")) {
+                _connectionMappings.Add(connectionId, instance.RoomCode); 
+            }
+        }
+        public void RegisterPlayer(string connectionId, string roomCode)
+        {
+            _connectionMappings[connectionId] = roomCode;
         }
         public void RemoveGameInstance(GameInstanceGuard instance)
         {
