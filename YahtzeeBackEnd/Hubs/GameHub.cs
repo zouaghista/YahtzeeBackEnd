@@ -51,21 +51,21 @@ namespace YahtzeeBackEnd.Hubs
                 }
             }
         }
-        public void CreateRoom(string roomName) {
+        public void CreateRoom(string playerName) {
+            string roomName;
+            do
+            {
+                roomName = RandomString();
+            } while (_gameRegistery.RoomExists(roomName));
             Console.WriteLine("Someone Tried to create a room");
-            if (_gameRegistery.RoomExists(roomName))
-            {
-                Clients.Caller.SendAsync("RoomCreation", "0");
-            }
-            else
-            {
-                GameInstanceGuard gameInstance = new(roomName, [Context.ConnectionId, ""]);
-                _gameRegistery.AddGameInstance(gameInstance);
-                Clients.Caller.SendAsync("RoomCreation", "1");
-            }
+            GameInstanceGuard gameInstance = new(roomName, [Context.ConnectionId, ""]);
+            gameInstance.RegisterPlayerName(0, playerName);
+            _gameRegistery.AddGameInstance(gameInstance);
+            Clients.Caller.SendAsync("RoomCreation", roomName);
+            
         }
 
-        public void JoinRoom(string roomName) {
+        public void JoinRoom(string roomName, string playerName) {
             var game = _gameRegistery.GetRoom(roomName);
             if (game!= null)
             {
@@ -75,8 +75,9 @@ namespace YahtzeeBackEnd.Hubs
                     return;
                 }
                 game.ConnectionIds[1] = Context.ConnectionId;
+                game.RegisterPlayerName(1, playerName);
                 _gameRegistery.RegisterPlayer(Context.ConnectionId, roomName);
-                Clients.Clients(game.ConnectionIds).SendAsync("RoomJoining", "1");
+                Clients.Clients(game.ConnectionIds).SendAsync("RoomJoining", game.GetPlayerNames());
             }
             else
             {
@@ -196,6 +197,14 @@ namespace YahtzeeBackEnd.Hubs
                 res += (dice[i]?"1":"0") + ",";
             }
             return res.Remove(res.Length - 1);
+        }
+        private static Random random = new Random();
+
+        private static string RandomString()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, 8)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 
