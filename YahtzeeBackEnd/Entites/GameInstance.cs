@@ -108,10 +108,11 @@ namespace YahtzeeBackEnd.Entites
                 //joker rules simulation, will check for double yathzees, only applies if player has 50 in the yathzee field.
                 Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] += Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] == 50 ? 50 : 0;
             }
-            if (Round == 13&&StartingPlayerPlayed)
+            if (Round == 1&&StartingPlayerPlayed) // 12
             {
                 TotalPlayerScores[0] = CalculateScore(Playerscores[0]);
                 TotalPlayerScores[1] = CalculateScore(Playerscores[1]);
+                Started = false;
                 return true;
             }
             if (StartingPlayerPlayed)
@@ -145,15 +146,26 @@ namespace YahtzeeBackEnd.Entites
         {
             return Playerscores[Player1Turn ? 1 : 0];
         }
-        public GameInstance() {
-            Playerscores[0] = new int[13];
-            Playerscores[1] = new int[13];
-            for(int i =0; i < 13; i++)
+        public void ResetGame()
+        {
+            Started = false;
+            Round = 0;
+            StartingPlayerPlayed = false;
+            Player1Turn = true;
+            RollCount = 0;
+            TotalPlayerScores[0] = -1;
+            TotalPlayerScores[1] = -1;
+            for (int i = 0; i < 13; i++)
             {
                 Playerscores[0][i] = -1;
                 Playerscores[1][i] = -1;
             }
             ResetDice();
+        }
+        public GameInstance() {
+            Playerscores[0] = new int[13];
+            Playerscores[1] = new int[13];
+            ResetGame();
         }
 
     }

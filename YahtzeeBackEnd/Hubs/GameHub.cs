@@ -26,6 +26,7 @@ namespace YahtzeeBackEnd.Hubs
             if (potentialRoom != null)
             {
                 if (!potentialRoom.ConnectionIds.Contains(Context.ConnectionId)) { return; }
+                if(potentialRoom.GameInstance.Started) { return; }
                 int playerId = potentialRoom.PlayerId(Context.ConnectionId);
                 if (potentialRoom.GameInstance.TotalPlayerScores[playerId] == -1)
                 {
@@ -84,13 +85,27 @@ namespace YahtzeeBackEnd.Hubs
                 Clients.Caller.SendAsync("RoomJoining", "0");
             }
         }
-
+        public void PlayAgain(string roomCode)
+        {
+            var potentialRoom = _gameRegistery.GetRoom(roomCode);
+            if (potentialRoom != null)
+            {
+                if (!potentialRoom.ConnectionIds.Contains(Context.ConnectionId)) { return; }
+                potentialRoom.SetWillingToPlay(potentialRoom.PlayerId(Context.ConnectionId));
+                if (potentialRoom.WillRetry.All(e => e))
+                {
+                    potentialRoom.GameInstance.ResetGame();
+                    potentialRoom.ResetWillingToPlay();
+                    Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RestartGame", "1");
+                }
+            }
+        }
         public void QuitRoom(string roomCode)
         {
             var potentialRoom = _gameRegistery.GetRoom(roomCode);
             if (potentialRoom != null) {
                 if (!potentialRoom.ConnectionIds.Contains(Context.ConnectionId)) { return; }
-                Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomQuitting", "1");
+                Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomClosure", "1");
                 _gameRegistery.RemoveGameInstance(potentialRoom);
             }
         }
@@ -144,6 +159,7 @@ namespace YahtzeeBackEnd.Hubs
             var potentialRoom = _gameRegistery.GetRoom(roomCode);
             if (potentialRoom != null)
             {
+                if (!potentialRoom.GameInstance.Started) return;
                 if (!potentialRoom.ConnectionIds.Contains(Context.ConnectionId)) { return; }
                 try
                 {
@@ -154,7 +170,6 @@ namespace YahtzeeBackEnd.Hubs
                         {
                             var result = potentialRoom.GameInstance.Playerscores;
                             Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", result);
-                            _gameRegistery.RemoveGameInstance(potentialRoom);//immidate deletion, Rematch logic will be added later
                         }
                         else
                         {
@@ -173,7 +188,7 @@ namespace YahtzeeBackEnd.Hubs
             var potentialRoom = _gameRegistery.GetConnectIdsRoom(Context.ConnectionId);
             if (potentialRoom != null)
             {
-                //Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomQuitting", "1");
+                Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomClosure", "1");
                 Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", "");
                 _gameRegistery.RemoveGameInstance(potentialRoom);
             }

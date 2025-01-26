@@ -6,6 +6,7 @@ namespace YahtzeeBackEnd.Entites
     {
         private GameInstance _gameInstance = new();
         public readonly string RoomCode = roomCode;
+        public bool[] WillRetry = [false, false];
         public string[] ConnectionIds = connectionIds;
         public string[] PlayerNames = new string[2];
         public GameInstance GameInstance { get => _gameInstance; }
@@ -31,7 +32,20 @@ namespace YahtzeeBackEnd.Entites
                 PlayerNames[id] = name;
             }
         }
-
+        public void SetWillingToPlay(int id)
+        {
+            if (id < 2)
+            {
+                WillRetry[id] = true;
+            }
+        }
+        public void ResetWillingToPlay()
+        {
+            for (int i = 0; i < WillRetry.Length; i++)
+            {
+                WillRetry[i] = false;
+            }
+        }
         public string GetPlayerNames()
         {
             return string.Join(":", PlayerNames);

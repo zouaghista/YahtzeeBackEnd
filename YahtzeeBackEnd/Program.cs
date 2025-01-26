@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<IGameRegistery, GameRegistery>();
 builder.Services.AddSignalR(options =>
 {
-    options.EnableDetailedErrors = true;
+    options.EnableDetailedErrors = false;
 });
 var app = builder.Build();
 app.MapHub<GameHub>("/Game");
