@@ -37,7 +37,7 @@ namespace YahtzeeBackEnd.Entites
             {
                 if (RollingDice[i])
                 {
-                    Dice[i] = (byte)rnd.Next(4, 6);
+                    Dice[i] = (byte)rnd.Next(1, 6);
                 }
             }
             RollCount++;
