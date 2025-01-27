@@ -12,7 +12,6 @@ namespace YahtzeeBackEnd.Hubs
         //Room Logic
         public override Task OnConnectedAsync()
         {
-            Console.WriteLine("Wa jena chkoun");
             return base.OnConnectedAsync();
         }
         public void CheckIfRoomExists(string roomName)
@@ -106,6 +105,7 @@ namespace YahtzeeBackEnd.Hubs
             if (potentialRoom != null) {
                 if (!potentialRoom.ConnectionIds.Contains(Context.ConnectionId)) { return; }
                 Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomClosure", "1");
+                Console.WriteLine("room tskrt ", potentialRoom.RoomCode);
                 _gameRegistery.RemoveGameInstance(potentialRoom);
             }
         }
@@ -188,6 +188,7 @@ namespace YahtzeeBackEnd.Hubs
             var potentialRoom = _gameRegistery.GetConnectIdsRoom(Context.ConnectionId);
             if (potentialRoom != null)
             {
+                Console.WriteLine("room tskrt ", potentialRoom.RoomCode);
                 Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomClosure", "1");
                 Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", "");
                 _gameRegistery.RemoveGameInstance(potentialRoom);
