@@ -199,7 +199,7 @@ namespace YahtzeeBackEnd.Entites
                     }
                     else
                     {
-                        scores[index]--;
+                        scores[index] = scores[winningIndex]-1;
                     }
                 }
             }
