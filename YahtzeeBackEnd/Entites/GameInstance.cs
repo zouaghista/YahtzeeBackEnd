@@ -50,9 +50,10 @@ namespace YahtzeeBackEnd.Entites
         /// <returns>True if the game has ended, False otherwise</returns>
         public bool SelectPlayerField(YathzeeMove move)
         {
-            if (move != YathzeeMove.Yahtzee && Dice.OrderBy(e => e).Count() == 1 && Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] >= 50 && Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] < 350)
+            if (move != YathzeeMove.Yahtzee && Dice.Distinct().Count() == 1 && Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] >= 50 && Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] < 400)
             {
-                if((int)move == --Dice[0]&& Playerscores[Player1Turn ? 0 : 1][(int)move]!=-1)
+                Playerscores[Player1Turn ? 0 : 1][(int)YathzeeMove.Yahtzee] += 100;
+                if ((int)move == (Dice[0]-1)&& Playerscores[Player1Turn ? 0 : 1][(int)move]==-1)
                 {
                     Playerscores[Player1Turn ? 0 : 1][(int)move] = Dice[0]*5;
                 }
@@ -127,18 +128,36 @@ namespace YahtzeeBackEnd.Entites
                             && diceDisposition.First() == 3) ? 25 : 0;
                         break;
                     case YathzeeMove.Small_straight:
-                        Playerscores[Player1Turn ? 0 : 1][(int)move] = ((List<byte[]>)[[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]]).
-                            Contains(Dice.OrderBy(e => e).Take(4).ToArray()) ? 30 : 0;
+                        Playerscores[Player1Turn ? 0 : 1][(int)move] = 0;
+                        var diceSet = Dice.Distinct().OrderBy(e => e).ToArray();
+                        if (diceSet.Count() < 4) break;
+                        for(int i = 0; i < 3; i++)
+                        {
+                            if (diceSet[i]!= ++diceSet[i+1])
+                            {
+                                break;
+                            }
+                        }
+                        Playerscores[Player1Turn ? 0 : 1][(int)move] = 30;
                         break;
                     case YathzeeMove.Large_straight:
-                        Playerscores[Player1Turn ? 0 : 1][(int)move] = ((List<byte[]>)[[1, 2, 3, 4, 5], [2, 3, 4, 5, 6]]).
-                                Contains([.. Dice.OrderBy(e => e)]) ? 50 : 0;
+                        Playerscores[Player1Turn ? 0 : 1][(int)move] = 0;
+                        var diceSet2 = Dice.Distinct().OrderBy(e => e).ToArray();
+                        if (diceSet2.Count() != 5) break;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (diceSet2[i] != ++diceSet2[i + 1])
+                            {
+                                break;
+                            }
+                        }
+                        Playerscores[Player1Turn ? 0 : 1][(int)move] = 40;
                         break;
                     case YathzeeMove.Chance:
                         Playerscores[Player1Turn ? 0 : 1][(int)move] = Dice.Sum(e => e);
                         break;
                     case YathzeeMove.Yahtzee:
-                        Playerscores[Player1Turn ? 0 : 1][(int)move] = Dice.OrderBy(e => e).Count() == 1 ? 50 : 0;
+                        Playerscores[Player1Turn ? 0 : 1][(int)move] = Dice.Distinct().Count() == 1 ? 50 : 0;
                         break;
                     default:
                         break;
@@ -163,7 +182,28 @@ namespace YahtzeeBackEnd.Entites
         }
         private int CalculateScore(int[] fields)
         {
-            return fields.Sum(e=>e) + fields.Take(6).Sum(e=>e) > 62 ? 35 : 0;
+            return fields.Where(e => e != -1).Sum() + (fields.Take(6).Where(e => e != -1).Sum() > 62 ? 35 : 0);
+        }
+        public string GetGameSummery(bool playerleft = false, int index = 0)
+        {
+            int[] scores = [CalculateScore(Playerscores[0]), CalculateScore(Playerscores[1])];
+            //determine penalties for early leaving if done
+            int winningIndex = (index + 1) % 2;
+            if (playerleft)
+            {
+                if (scores[winningIndex] <= scores[index])
+                {
+                    if (scores[index] == 0)
+                    {
+                        scores[winningIndex]++;
+                    }
+                    else
+                    {
+                        scores[index]--;
+                    }
+                }
+            }
+            return string.Join(":", scores);
         }
         public int[] GetCurrentPlayerScore()
         {

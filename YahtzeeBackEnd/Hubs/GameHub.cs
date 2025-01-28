@@ -104,6 +104,7 @@ namespace YahtzeeBackEnd.Hubs
             var potentialRoom = _gameRegistery.GetRoom(roomCode);
             if (potentialRoom != null) {
                 if (!potentialRoom.ConnectionIds.Contains(Context.ConnectionId)) { return; }
+                Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", potentialRoom.GameInstance.GetGameSummery(true, potentialRoom.PlayerId(Context.ConnectionId)));
                 Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomClosure", "1");
                 Console.WriteLine("room tskrt ", potentialRoom.RoomCode);
                 _gameRegistery.RemoveGameInstance(potentialRoom);
@@ -166,16 +167,12 @@ namespace YahtzeeBackEnd.Hubs
 
                     if (potentialRoom.VerifyPlayerTurn(Context.ConnectionId) && potentialRoom.VerifyLegalMove(move))
                     {
+                        Clients.Clients(potentialRoom.ConnectionIds).SendAsync("FieldSelection", $"{potentialRoom.PlayerId(Context.ConnectionId)}:{field}:{potentialRoom.GameInstance.GetLastPlayerScore()[(int)move]}");
                         if (potentialRoom.GameInstance.SelectPlayerField(move))
                         {
-                            var result = potentialRoom.GameInstance.Playerscores;
-                            Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", result);
+                            Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", potentialRoom.GameInstance.GetGameSummery());
                         }
-                        else
-                        {
-                            Clients.Clients(potentialRoom.ConnectionIds).SendAsync("FieldSelection", $"{potentialRoom.PlayerId(Context.ConnectionId)}:{field}:{potentialRoom.GameInstance.GetLastPlayerScore()[(int)move]}");
-                            Console.WriteLine($"{potentialRoom.PlayerId(Context.ConnectionId)}:{field}:{potentialRoom.GameInstance.GetLastPlayerScore()[(int)move]}");
-                        }
+                        //Console.WriteLine(potentialRoom.GameInstance.GetGameSummery());
                     }
                 }catch
                 {
@@ -189,8 +186,8 @@ namespace YahtzeeBackEnd.Hubs
             if (potentialRoom != null)
             {
                 Console.WriteLine("room tskrt ", potentialRoom.RoomCode);
+                Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", potentialRoom.GameInstance.GetGameSummery(true, potentialRoom.PlayerId(Context.ConnectionId)));
                 Clients.Clients(potentialRoom.ConnectionIds).SendAsync("RoomClosure", "1");
-                Clients.Clients(potentialRoom.ConnectionIds).SendAsync("GameSummery", "");
                 _gameRegistery.RemoveGameInstance(potentialRoom);
             }
             return base.OnDisconnectedAsync(exception);
